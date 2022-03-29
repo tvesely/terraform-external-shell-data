@@ -4,11 +4,11 @@ set -euo pipefail
 # cannot possibly be included in the stdin.
 IFS="|" read -a PARAMS <<< $(cat | sed -e 's/__59077cc7e1934758b19d469c410613a7_TF_MAGIC_SEGMENT_SEPARATOR/|/g')
 
-_directory=$(echo "${PARAMS[1]}" | base64 --decode)
-_command=$(echo "${PARAMS[2]}" | base64 --decode)
-_environment=$(echo "${PARAMS[3]}" | base64 --decode)
-_exit_on_nonzero=$(echo "${PARAMS[4]}" | base64 --decode)
-_exit_on_stderr=$(echo "${PARAMS[5]}" | base64 --decode)
+_directory=$(echo "${PARAMS[1]}" | base64 -d)
+_command=$(echo "${PARAMS[2]}" | base64 -d)
+_environment=$(echo "${PARAMS[3]}" | base64 -d)
+_exit_on_nonzero=$(echo "${PARAMS[4]}" | base64 -d)
+_exit_on_stderr=$(echo "${PARAMS[5]}" | base64 -d)
 
 # Generate a random/unique ID
 _id="$RANDOM-$RANDOM-$RANDOM-$RANDOM"
@@ -29,7 +29,7 @@ for _env in "${ENVRNMT[@]}"; do
     # a colon.
 	IFS=':' read -ra ENVRNMT_PARTS <<< "$_env"
     _key="${ENVRNMT_PARTS[0]}"
-    _val=$(echo "${ENVRNMT_PARTS[1]}" | base64 --decode)
+    _val=$(echo "${ENVRNMT_PARTS[1]}" | base64 -d)
     export "$_key"="$_val"
 done
 
@@ -70,8 +70,8 @@ if ( [ "$_exit_on_nonzero" = "true" ] && [ $_exitcode -ne 0 ] ) || ( [ "$_exit_o
 fi
 
 # Base64-encode the stdout and stderr for transmission back to Terraform
-_stdout_b64=$(echo -n "$_stdout" | base64 --wrap 0)
-_stderr_b64=$(echo -n "$_stderr" | base64 --wrap 0)
+_stdout_b64=$(echo -n "$_stdout" | base64 -w 0)
+_stderr_b64=$(echo -n "$_stderr" | base64 -w 0)
 
 # Echo a JSON string that Terraform can parse as the result
 echo -n "{\"stdout\": \"$_stdout_b64\", \"stderr\": \"$_stderr_b64\", \"exitcode\": \"$_exitcode\"}"
